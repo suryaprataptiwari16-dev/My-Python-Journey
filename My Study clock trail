@@ -1,0 +1,497 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyClock — Your Study Space</title>
+<style>
+:root {
+  --bg:#f3f5f9; --panel:#ffffff; --text:#172033;
+  --muted:#788397; --line:#e8ebf1; --accent:#4569e8;
+  --soft:#edf1ff; --shadow:0 8px 30px #25345b0b;
+}
+body.dark {
+  --bg:#111522; --panel:#1b2232; --text:#f2f4fb;
+  --muted:#a0abc0; --line:#30394c; --accent:#8299ff;
+  --soft:#293452; --shadow:0 8px 30px #0003;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:"Segoe UI",Arial,sans-serif;transition:.2s}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#login{
+ min-height:100vh;display:grid;place-items:center;padding:20px;
+ background:radial-gradient(circle at 15% 15%,#dce5ff,transparent 35%),var(--bg)
+}
+.login-card{background:var(--panel);width:min(420px,100%);padding:35px;
+ border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+.logo{font-size:25px;font-weight:750;letter-spacing:-1px}
+.logo span{color:var(--accent)}
+.login-card h1{font-size:29px;margin:35px 0 8px}
+.muted{color:var(--muted)}
+.field{width:100%;padding:13px 14px;border:1px solid var(--line);
+ background:var(--bg);color:var(--text);border-radius:11px;margin:7px 0 15px;outline:none}
+.field:focus{border-color:var(--accent)}
+.primary{background:var(--accent);color:white;border:0;padding:12px 17px;
+ border-radius:11px;font-weight:650}
+.primary:hover{filter:brightness(1.08)}
+.secondary{background:var(--soft);color:var(--accent);border:0;
+ padding:11px 15px;border-radius:10px;font-weight:600}
+#app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:var(--panel);border-right:1px solid var(--line);
+ padding:22px 15px;display:flex;flex-direction:column;flex-shrink:0}
+.brand{padding:5px 12px 28px}
+.brand small{display:block;color:var(--muted);margin-top:5px}
+.nav-label{font-size:11px;color:var(--muted);font-weight:700;
+ letter-spacing:1px;padding:14px 12px 8px}
+.nav button{width:100%;border:0;background:transparent;color:var(--muted);
+ text-align:left;padding:12px;border-radius:10px;margin:2px 0;font-size:14px}
+.nav button:hover,.nav button.active{background:var(--soft);color:var(--accent)}
+.profile{margin-top:auto;border-top:1px solid var(--line);padding:17px 8px 0;
+ display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:12px;background:var(--soft);
+ color:var(--accent);display:grid;place-items:center;font-weight:750}
+.profile small{display:block;color:var(--muted);margin-top:3px}
+.main{flex:1;min-width:0;padding:28px 34px;max-width:1500px;margin:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;
+ gap:15px;margin-bottom:28px}
+.topbar h1{font-size:26px;margin:0;letter-spacing:-.7px}
+.top-actions{display:flex;gap:9px;align-items:center}
+.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--text);
+ padding:10px 13px;border-radius:10px}
+.page{display:none}.page.active{display:block}
+.greeting{margin-bottom:22px}
+.greeting h2{font-size:23px;margin:0 0 5px}
+.greeting p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;
+ padding:19px;box-shadow:var(--shadow);min-width:0}
+.stat-label{color:var(--muted);font-size:13px}
+.stat{font-size:27px;font-weight:750;margin-top:10px}
+.section-title{font-size:17px;font-weight:700;margin:27px 0 13px}
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.timer{text-align:center;padding:28px}
+.timer-number{font-size:65px;font-weight:750;letter-spacing:-3px;margin:18px 0}
+.timer-controls{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--panel);color:var(--text);
+ border-radius:20px;padding:7px 13px;font-size:13px}
+.pill.selected{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+.progress{height:8px;background:var(--line);border-radius:10px;overflow:hidden;margin:13px 0}
+.progress div{height:100%;background:var(--accent);width:0;transition:.3s}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;
+ padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.item:last-child{border:0}
+.item small{display:block;color:var(--muted);margin-top:4px}
+.tag{font-size:11px;padding:5px 8px;border-radius:20px;background:var(--soft);color:var(--accent)}
+.form-row{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.form-row .field{flex:1;min-width:140px;margin:0}
+.task-done{text-decoration:line-through;color:var(--muted)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;
+ padding:17px 0;border-bottom:1px solid var(--line);gap:15px}
+textarea.field{min-height:90px;resize:vertical}
+.assistant-reply{background:var(--soft);padding:15px;border-radius:12px;margin-top:15px;line-height:1.6}
+.premium{background:linear-gradient(135deg,#263b83,#627ce8);color:white;
+ border:0;padding:28px;border-radius:19px}
+.premium .muted{color:#d9e1ff}
+.small{font-size:12px;color:var(--muted)}
+@media(max-width:900px){
+ .sidebar{width:190px}.main{padding:22px}.grid{grid-template-columns:repeat(2,1fr)}
+ .two{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+ #app{display:block}.sidebar{width:100%;padding:12px}
+ .brand{padding:5px 8px 10px}.nav-label,.profile{display:none}
+ .nav{display:flex;overflow-x:auto;gap:4px}
+ .nav button{white-space:nowrap;width:auto;padding:10px}
+ .main{padding:18px}.grid{grid-template-columns:repeat(2,1fr)}
+ .topbar h1{font-size:21px}
+}
+</style>
+</head>
+<body>
+
+<!-- DEMO LOGIN -->
+<section id="login">
+ <div class="login-card">
+  <div class="logo">Study<span>Clock</span></div>
+  <p class="muted">Your personal study space.</p>
+  <h1>Welcome back.</h1>
+  <p class="muted">Sign in to your demo workspace.</p>
+  <form id="loginForm">
+   <label>Email</label>
+   <input class="field" id="email" type="email" value="student@studyclock.demo" required>
+   <label>Password</label>
+   <input class="field" id="password" type="password" value="StudyClock123" required>
+   <button class="primary" style="width:100%">Sign in</button>
+  </form>
+  <p id="loginError" style="color:#dc5555;font-size:13px"></p>
+  <p class="small">Demo account only. This is not a secure real account.</p>
+ </div>
+</section>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+ <aside class="sidebar">
+  <div class="brand">
+   <div class="logo">Study<span>Clock</span></div>
+   <small>Your study workspace</small>
+  </div>
+  <div class="nav-label">WORKSPACE</div>
+  <nav class="nav">
+   <button class="active" data-page="dashboard">⌂ &nbsp; Dashboard</button>
+   <button data-page="focus">◷ &nbsp; Focus Mode</button>
+   <button data-page="classes">▦ &nbsp; Classes & Lectures</button>
+   <button data-page="tasks">☑ &nbsp; To-do List</button>
+   <button data-page="assistant">✦ &nbsp; Study Assistant</button>
+   <button data-page="analytics">▥ &nbsp; Analytics</button>
+  </nav>
+  <div class="nav-label">PERSONAL</div>
+  <nav class="nav">
+   <button data-page="settings">⚙ &nbsp; Settings</button>
+   <button data-page="premium">✧ &nbsp; Premium</button>
+  </nav>
+  <div class="profile">
+   <div class="avatar">S</div>
+   <div><b>Student</b><small>Demo account</small></div>
+  </div>
+ </aside>
+
+ <main class="main">
+  <header class="topbar">
+   <h1 id="pageTitle">Dashboard</h1>
+   <div class="top-actions">
+    <button class="icon-btn" onclick="toggleTheme()">☼</button>
+    <button class="icon-btn" onclick="logout()">Sign out</button>
+   </div>
+  </header>
+
+  <section class="page active" id="dashboard">
+   <div class="greeting">
+    <h2>Good day, Student 👋</h2>
+    <p>Make today a productive one. One step at a time.</p>
+   </div>
+   <div class="grid">
+    <div class="card"><div class="stat-label">Focus sessions</div><div class="stat" id="statSessions">0</div></div>
+    <div class="card"><div class="stat-label">Tasks completed</div><div class="stat" id="statTasks">0</div></div>
+    <div class="card"><div class="stat-label">Study time</div><div class="stat" id="statTime">0 min</div></div>
+    <div class="card"><div class="stat-label">Upcoming lectures</div><div class="stat" id="statLectures">0</div></div>
+   </div>
+   <div class="two">
+    <div>
+     <h3 class="section-title">Focus timer</h3>
+     <div class="card timer">
+      <div class="muted">Your next focus session</div>
+      <div class="timer-number" id="miniTimer">25:00</div>
+      <button class="primary" onclick="showPage('focus')">Open Focus Mode</button>
+     </div>
+     <h3 class="section-title">Your tasks</h3>
+     <div class="card" id="dashboardTasks"></div>
+    </div>
+    <div>
+     <h3 class="section-title">Study progress</h3>
+     <div class="card">
+      <b>Daily goal</b>
+      <p class="muted small">Complete focus sessions to build your progress.</p>
+      <div class="progress"><div id="goalProgress"></div></div>
+      <b id="goalText">0 of 4 sessions</b>
+     </div>
+     <h3 class="section-title">Upcoming classes</h3>
+     <div class="card" id="dashboardLectures"></div>
+    </div>
+   </div>
+  </section>
+
+  <section class="page" id="focus">
+   <div class="card timer">
+    <div class="muted">FOCUS SESSION</div>
+    <div class="timer-number" id="timerDisplay">25:00</div>
+    <div class="timer-controls" style="margin-bottom:20px">
+     <button class="pill selected" onclick="setDuration(25,this)">25 min</button>
+     <button class="pill" onclick="setDuration(45,this)">45 min</button>
+     <button class="pill" onclick="setDuration(60,this)">60 min</button>
+     <button class="pill" onclick="setDuration(90,this)">90 min</button>
+    </div>
+    <div class="timer-controls">
+     <button class="primary" id="startBtn" onclick="startTimer()">Start focus</button>
+     <button class="secondary" onclick="pauseTimer()">Pause</button>
+     <button class="secondary" onclick="resetTimer()">Reset</button>
+    </div>
+    <p class="muted small" id="timerStatus">Ready when you are.</p>
+   </div>
+   <h3 class="section-title">Focus Mode settings</h3>
+   <div class="card">
+    <b>Distraction control (demo)</b>
+    <p class="muted small">Choose which apps you plan to use during your session.</p>
+    <div id="appChoices">
+     <div class="setting-row"><span>StudyClock</span><input type="checkbox" checked></div>
+     <div class="setting-row"><span>Microsoft Edge</span><input type="checkbox" checked></div>
+     <div class="setting-row"><span>OneNote</span><input type="checkbox" checked></div>
+     <div class="setting-row"><span>Calculator</span><input type="checkbox" checked></div>
+     <div class="setting-row"><span>Games</span><input type="checkbox"></div>
+     <div class="setting-row"><span>Social media</span><input type="checkbox"></div>
+    </div>
+    <p class="small">These selections are a planning feature. They do not block Windows applications.</p>
+   </div>
+  </section>
+
+  <section class="page" id="classes">
+   <h3 class="section-title">Add a lecture</h3>
+   <div class="card">
+    <form class="form-row" id="lectureForm">
+     <input class="field" id="lectureName" placeholder="Lecture name" required>
+     <input class="field" id="lectureTime" type="datetime-local" required>
+     <button class="primary">Add lecture</button>
+    </form>
+   </div>
+   <h3 class="section-title">Your schedule</h3>
+   <div class="card" id="lectureList"></div>
+  </section>
+
+  <section class="page" id="tasks">
+   <h3 class="section-title">Create a task</h3>
+   <div class="card">
+    <form class="form-row" id="taskForm">
+     <input class="field" id="taskName" placeholder="What do you need to do?" required>
+     <select class="field" id="taskPriority">
+      <option>Normal</option><option>High</option><option>Low</option>
+     </select>
+     <button class="primary">Add task</button>
+    </form>
+   </div>
+   <h3 class="section-title">Your task list</h3>
+   <div class="card" id="taskList"></div>
+  </section>
+
+  <section class="page" id="assistant">
+   <h3 class="section-title">Study Assistant</h3>
+   <div class="card">
+    <p class="muted">Ask for help planning your study session or organising your work.</p>
+    <textarea class="field" id="question" placeholder="What would you like help with?"></textarea>
+    <button class="primary" onclick="askAssistant()">Send message</button>
+    <div id="assistantReply" class="assistant-reply hidden"></div>
+    <p class="small">This prototype uses preset responses, not a live AI service.</p>
+   </div>
+  </section>
+
+  <section class="page" id="analytics">
+   <h3 class="section-title">Your study analytics</h3>
+   <div class="grid">
+    <div class="card"><div class="stat-label">Completed sessions</div><div class="stat" id="analyticsSessions">0</div></div>
+    <div class="card"><div class="stat-label">Total focus time</div><div class="stat" id="analyticsTime">0 min</div></div>
+    <div class="card"><div class="stat-label">Completed tasks</div><div class="stat" id="analyticsTasks">0</div></div>
+    <div class="card"><div class="stat-label">Pending tasks</div><div class="stat" id="analyticsPending">0</div></div>
+   </div>
+   <h3 class="section-title">Your progress</h3>
+   <div class="card">
+    <b>Daily focus goal</b>
+    <div class="progress"><div id="analyticsProgress"></div></div>
+    <span id="analyticsGoal" class="muted small"></span>
+   </div>
+  </section>
+
+  <section class="page" id="settings">
+   <h3 class="section-title">Appearance</h3>
+   <div class="card">
+    <div class="setting-row"><span>Theme</span>
+     <select class="field" style="max-width:160px;margin:0" id="themeSelect" onchange="setTheme(this.value)">
+      <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+     </select>
+    </div>
+   </div>
+   <h3 class="section-title">Account</h3>
+   <div class="card">
+    <div class="setting-row"><span>Account type</span><b>Demo account</b></div>
+    <div class="setting-row"><span>Storage</span><b>Local browser storage</b></div>
+    <button class="secondary" onclick="logout()">Sign out</button>
+   </div>
+  </section>
+
+  <section class="page" id="premium">
+   <div class="premium">
+    <div class="small" style="color:#d9e1ff">STUDYCLOCK PREMIUM</div>
+    <h2 style="font-size:30px;margin:12px 0">Your study space. Upgraded.</h2>
+    <p class="muted">Explore the Premium experience in this prototype.</p>
+    <h1 style="font-size:38px;margin-bottom:5px">₹0 <small style="font-size:14px">/ demo</small></h1>
+    <p class="muted">14-day trial simulation</p>
+   </div>
+   <h3 class="section-title">Premium features in this demo</h3>
+   <div class="card">
+    <div class="setting-row"><span>✓ Focus timer</span><span class="tag">Unlocked</span></div>
+    <div class="setting-row"><span>✓ Classes and lectures</span><span class="tag">Unlocked</span></div>
+    <div class="setting-row"><span>✓ Tasks and priorities</span><span class="tag">Unlocked</span></div>
+    <div class="setting-row"><span>✓ Study analytics</span><span class="tag">Unlocked</span></div>
+    <div class="setting-row"><span>✓ Study Assistant demo</span><span class="tag">Unlocked</span></div>
+    <p class="small">The proposed future price is ₹139/month. No payment or subscription is active in this prototype.</p>
+   </div>
+  </section>
+ </main>
+</div>
+
+<script>
+const DEMO_EMAIL="student@studyclock.demo";
+const DEMO_PASSWORD="StudyClock123";
+
+const $=id=>document.getElementById(id);
+let tasks=JSON.parse(localStorage.getItem("sc_tasks")||"[]");
+let lectures=JSON.parse(localStorage.getItem("sc_lectures")||"[]");
+let sessions=Number(localStorage.getItem("sc_sessions")||0);
+let totalMinutes=Number(localStorage.getItem("sc_minutes")||0);
+
+function save(){
+ localStorage.setItem("sc_tasks",JSON.stringify(tasks));
+ localStorage.setItem("sc_lectures",JSON.stringify(lectures));
+ localStorage.setItem("sc_sessions",sessions);
+ localStorage.setItem("sc_minutes",totalMinutes);
+}
+function login(){
+ $("login").classList.add("hidden");
+ $("app").classList.remove("hidden");
+ render();
+}
+$("loginForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if($("email").value===DEMO_EMAIL && $("password").value===DEMO_PASSWORD){
+  sessionStorage.setItem("sc_logged_in","yes");
+  $("loginError").textContent="";
+  login();
+ }else $("loginError").textContent="Incorrect demo email or password.";
+});
+function logout(){
+ sessionStorage.removeItem("sc_logged_in");
+ $("app").classList.add("hidden");
+ $("login").classList.remove("hidden");
+}
+if(sessionStorage.getItem("sc_logged_in")==="yes")login();
+
+function showPage(name){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ $(name).classList.add("active");
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+ $("pageTitle").textContent=document.querySelector(`[data-page="${name}"]`).textContent.trim().replace(/^[^\w]+/,"");
+ render();
+}
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+
+function setTheme(value){
+ localStorage.setItem("sc_theme",value);
+ applyTheme();
+}
+function applyTheme(){
+ let t=localStorage.getItem("sc_theme")||"system";
+ let dark=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+ document.body.classList.toggle("dark",dark);
+ if($("themeSelect"))$("themeSelect").value=t;
+}
+function toggleTheme(){
+ let dark=document.body.classList.contains("dark");
+ setTheme(dark?"light":"dark");
+}
+applyTheme();
+
+let duration=25*60,remaining=duration,interval=null;
+function clockText(n){return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")}
+function updateClock(){
+ $("timerDisplay").textContent=clockText(remaining);
+ $("miniTimer").textContent=clockText(remaining);
+}
+function setDuration(minutes,button){
+ pauseTimer();duration=minutes*60;remaining=duration;updateClock();
+ document.querySelectorAll(".pill").forEach(b=>b.classList.remove("selected"));
+ button.classList.add("selected");
+}
+function startTimer(){
+ if(interval)return;
+ $("timerStatus").textContent="Focus session in progress.";
+ interval=setInterval(()=>{
+  remaining--;
+  updateClock();
+  if(remaining<=0){
+   pauseTimer();
+   sessions++;totalMinutes+=duration/60;save();render();
+   $("timerStatus").textContent="Session completed. Great work!";
+   alert("Focus session completed!");
+  }
+ },1000);
+}
+function pauseTimer(){
+ clearInterval(interval);interval=null;
+ if($("timerStatus"))$("timerStatus").textContent="Timer paused.";
+}
+function resetTimer(){
+ pauseTimer();remaining=duration;updateClock();
+ $("timerStatus").textContent="Timer reset.";
+}
+updateClock();
+
+$("taskForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ tasks.push({name:$("taskName").value,priority:$("taskPriority").value,done:false});
+ $("taskName").value="";save();render();
+});
+function toggleTask(i){tasks[i].done=!tasks[i].done;save();render()}
+function deleteTask(i){tasks.splice(i,1);save();render()}
+
+$("lectureForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ lectures.push({name:$("lectureName").value,time:$("lectureTime").value});
+ $("lectureName").value="";$("lectureTime").value="";
+ save();render();
+});
+function deleteLecture(i){lectures.splice(i,1);save();render()}
+
+function renderTasks(){
+ let html=tasks.length?tasks.map((t,i)=>`
+ <div class="item">
+  <label style="display:flex;align-items:center;gap:9px">
+   <input type="checkbox" ${t.done?"checked":""} onchange="toggleTask(${i})">
+   <span class="${t.done?"task-done":""}">${escapeHTML(t.name)}
+    <small>${escapeHTML(t.priority)} priority</small></span>
+  </label>
+  <button class="icon-btn" onclick="deleteTask(${i})">×</button>
+ </div>`).join(""):"<p class='muted'>No tasks yet. Add your first task!</p>";
+ $("taskList").innerHTML=html;
+ $("dashboardTasks").innerHTML=tasks.slice(0,4).map(t=>`<div class="item">${escapeHTML(t.name)} <span class="tag">${t.done?"Done":"Pending"}</span></div>`).join("")||"<p class='muted'>Your tasks will appear here.</p>";
+}
+function renderLectures(){
+ let sorted=[...lectures].sort((a,b)=>a.time.localeCompare(b.time));
+ $("lectureList").innerHTML=sorted.map((l,i)=>`
+ <div class="item"><div><b>${escapeHTML(l.name)}</b><small>${new Date(l.time).toLocaleString()}</small></div>
+ <button class="icon-btn" onclick="deleteLecture(${lectures.indexOf(l)})">×</button></div>`).join("")||"<p class='muted'>No lectures scheduled yet.</p>";
+ $("dashboardLectures").innerHTML=sorted.slice(0,4).map(l=>`<div class="item"><b>${escapeHTML(l.name)}</b><small>${new Date(l.time).toLocaleString()}</small></div>`).join("")||"<p class='muted'>No upcoming lectures.</p>";
+}
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function render(){
+ renderTasks();renderLectures();
+ let done=tasks.filter(t=>t.done).length;
+ $("statSessions").textContent=sessions;
+ $("statTasks").textContent=done;
+ $("statTime").textContent=totalMinutes+" min";
+ $("statLectures").textContent=lectures.length;
+ $("analyticsSessions").textContent=sessions;
+ $("analyticsTime").textContent=totalMinutes+" min";
+ $("analyticsTasks").textContent=done;
+ $("analyticsPending").textContent=tasks.length-done;
+ let progress=Math.min(100,sessions/4*100);
+ $("goalProgress").style.width=progress+"%";
+ $("analyticsProgress").style.width=progress+"%";
+ $("goalText").textContent=sessions+" of 4 sessions";
+ $("analyticsGoal").textContent=sessions+" of 4 daily focus sessions completed.";
+}
+function askAssistant(){
+ let q=$("question").value.trim();
+ if(!q)return;
+ let reply="Try breaking your work into small steps. Start with one 25-minute focus session, take a short break, and review what you completed. What is the first small task you can begin?";
+ if(/timetable|schedule/i.test(q))reply="Make a simple plan: choose your most important subject first, schedule a focus session, then leave time for revision and breaks.";
+ if(/math|problem/i.test(q))reply="Read the question carefully, identify what is given, choose the correct operation, and solve one step at a time. Check your answer at the end.";
+ if(/exam|revision/i.test(q))reply="Use active recall: close your book, explain the topic from memory, then check what you missed. Practise questions after revising.";
+ $("assistantReply").textContent=reply;
+ $("assistantReply").classList.remove("hidden");
+}
+</script>
+</body>
+</html>
